@@ -14,7 +14,33 @@ export default class Chat extends Component {
         messages: [],
         message: {},
         loading: true,
-        actual_room: ""
+        actual_room: "",
+        connected: {
+            room: "",
+            conn: false,
+            msg: "",
+            user: ""
+        },
+        leave: {
+            room: "",
+            msg: "",
+            user: "",
+            leave: false
+        }
+    }
+
+    componentDidMount() {
+        if (!localStorage.getItem('user')) {
+            this.props.history.push("/")
+        }
+        this.setState({
+            loading: false,
+            user: localStorage.getItem("user"),
+            actual_room: localStorage.getItem('actual_room')
+        });
+        this.setMessages();
+        this.onConnected();
+        this.onLeave();
     }
 
     onLoadMessage() {
@@ -39,17 +65,38 @@ export default class Chat extends Component {
         }
     }
 
-    componentDidMount() {
-        if (!localStorage.getItem('user')) {
-            this.props.history.push("/")
-        }
-        this.setState({
-            users: ["santi2804", "miguel123", "juan987", "laloca69"],
-            user: localStorage.getItem("user"),
-            loading: false,
-            actual_room: localStorage.getItem('actual_room')
-        });
-        this.setMessages();
+    onConnected() {
+        socket.on("connected", (msg, user, room, users) => {
+            console.log("conectado")
+            this.setState({
+                connected: {
+                    room,
+                    conn: true,
+                    msg,
+                    user
+                },
+                users
+            })
+        })
+    }
+
+    leave() {
+        socket.emit("leave_room", this.state.user);
+        localStorage.removeItem("actual_room");
+    }
+
+    onLeave() {
+        socket.on("leave_room", (msg, user, room, users) => {
+            this.setState({
+                leave: {
+                    room,
+                    user,
+                    msg,
+                    leave: true
+                },
+                users
+            })
+        })
     }
 
     onChange(e) {
@@ -74,7 +121,8 @@ export default class Chat extends Component {
     }
 
     onClick() {
-        localStorage.removeItem('actual_room')
+        this.leave();
+        localStorage.removeItem('actual_room');
     }
 
     onKeyPress(e) {
@@ -85,12 +133,12 @@ export default class Chat extends Component {
     }
 
     render() {
-        const { message, messages, users, user, loading, actual_room } = this.state;
+        const { message, messages, users, user, loading, actual_room, connected, leave } = this.state;
         if (!loading) {
             setTimeout(() => {
                 const msgs = document.getElementById('messages');
                 msgs.scrollTo(0, msgs.scrollWidth);
-            }, 100)
+            }, 200)
         }
         function custom_sort(a, b) {
             return new Date(a.date).getTime() - new Date(b.date).getTime();
@@ -104,7 +152,9 @@ export default class Chat extends Component {
                     <InfoBar room={this.props.match.params.chat} onClick={this.onClick.bind(this)} />
                 </Col>
                 <Col sm="3">
-                    <UsersBar users={users} />
+                    {
+                        connected.room === actual_room ? Object.keys(users).length > 0 ? <UsersBar users={users} /> : <></> : <></>
+                    }
                 </Col>
                 <Col>
                     {
@@ -117,6 +167,20 @@ export default class Chat extends Component {
                                                 return <Message msg={msg} user={user} key={i} />
                                             return <></>
                                         })
+                                    }
+                                    {
+                                        connected.conn && connected.room === actual_room && connected.user !== user ? (
+                                            <div className="connected_msg">{connected.msg}</div>
+                                        ) : (
+                                            <></>
+                                        )
+                                    }
+                                    {
+                                        leave.leave && leave.room === actual_room && leave.user !== user ? (
+                                            <div className="disconnected_msg">{leave.msg}</div>
+                                        ) : (
+                                            <></>
+                                        )
                                     }
                                 </div>
                                 <div>

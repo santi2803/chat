@@ -21,7 +21,7 @@ export default class Chats extends Component {
 
     onClick(chat) {
         localStorage.setItem('actual_room', chat);
-        socket.emit('connected', localStorage.getItem('user'), chat);
+        socket.emit('connected', socket.id, localStorage.getItem('user'), chat);
         socket.off()
     }
 
