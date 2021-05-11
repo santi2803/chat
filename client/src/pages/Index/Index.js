@@ -35,9 +35,7 @@ export default class Index extends Component {
 
     }
 
-    send(e, data) {
-        e.preventDefault();
-
+    send(data) {
         if (Object.keys(data).length === 0) {
             this.setState({
                 alert: {
@@ -51,6 +49,13 @@ export default class Index extends Component {
         localStorage.setItem("user", data.username);
 
         this.props.history.push("/chats")
+    }
+
+    onKeyPress(e) {
+        const { data } = this.state;
+        if (e.key === "Enter") {
+            this.send(data);
+        }
     }
 
     render() {
@@ -79,11 +84,12 @@ export default class Index extends Component {
                                 name="username"
                                 aria-describedby="basic-addon1"
                                 onChange={this.onChange.bind(this)}
+                                onKeyDown={this.onKeyPress.bind(this)}
                             />
                             <InputGroup.Append>
                                 <Button
                                     variant="outline-secondary"
-                                    onClick={e => this.send(e, data)}
+                                    onClick={() => this.send(data)}
                                 >
                                     Go
                                 </Button>

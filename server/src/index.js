@@ -26,10 +26,14 @@ const io = socket(server, {
 io.on('connection', socket => {
     socket.on('connected', (id, user, room) => {
         saveDataOfRoom(id, user, room);
-        //io.sockets.in(room).emit('connected', {room, users: getUsersOfRoom(room)})
-        if (room in rooms) {
-            io.emit("connected", user + " se a unido a esta sala ", user, room, { users: getUsersOfRoom(room) });
-        }
+        io.emit("connected", user + " se a unido a esta sala ", user, room, {
+            users: {
+                Programacion: getUsersOfRoom('Programacion'),
+                Fisica: getUsersOfRoom('Fisica'),
+                Matematicas: getUsersOfRoom('Matematicas')
+            }
+        });
+        /* io.emit('connected', user + " se a unido a esta sala ", user, room, { users: getUsersOfRoom(room) }) */
     });
 
     socket.on("message", message => {
@@ -39,7 +43,13 @@ io.on('connection', socket => {
     socket.on("leave_room", (user) => {
         const { roomName } = searchBySocketId(socket.id);
         deleteUserFromRoom(socket.id, roomName);
-        io.emit('leave_room', user + " ha abandonado la sala", user, roomName, { users: getUsersOfRoom(roomName) });
+        io.emit('leave_room', user + " ha abandonado la sala", user, roomName, {
+            users: {
+                Programacion: getUsersOfRoom('Programacion'),
+                Fisica: getUsersOfRoom('Fisica'),
+                Matematicas: getUsersOfRoom('Matematicas')
+            }
+        });
     })
 })
 

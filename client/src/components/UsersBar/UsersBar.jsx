@@ -1,11 +1,11 @@
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 
-export default function UsersBar({ users }) {
+export default function UsersBar({ users, room }) {
     return (
         <Nav className="col-md-12 d-md-block bg-dark p-4 user-bar">
             {
-                users.users.map(user => {
+                users[room].map(user => {
                     if (user === localStorage.getItem('user')) {
                         return (
                             <Nav.Item className="item mei p-4" key={user}>

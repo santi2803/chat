@@ -33,14 +33,20 @@ export default class Chat extends Component {
         if (!localStorage.getItem('user')) {
             this.props.history.push("/")
         }
+
+        this.setMessages();
+        this.onConnected();
+        this.onLeave();
+
         this.setState({
             loading: false,
             user: localStorage.getItem("user"),
             actual_room: localStorage.getItem('actual_room')
         });
-        this.setMessages();
+    }
+
+    componentDidUpdate() {
         this.onConnected();
-        this.onLeave();
     }
 
     onLoadMessage() {
@@ -66,16 +72,17 @@ export default class Chat extends Component {
     }
 
     onConnected() {
-        socket.on("connected", (msg, user, room, users) => {
-            console.log("conectado")
+        socket.on("connected", (msg, user, room, info) => {
+            let { users } = this.state;
+            users = info.users;
             this.setState({
+                users, 
                 connected: {
                     room,
                     conn: true,
                     msg,
                     user
                 },
-                users
             })
         })
     }
@@ -86,15 +93,17 @@ export default class Chat extends Component {
     }
 
     onLeave() {
-        socket.on("leave_room", (msg, user, room, users) => {
+        socket.on("leave_room", (msg, user, room, info) => {
+            let { users } = this.state;
+            users = info.users;
             this.setState({
+                users,
                 leave: {
                     room,
                     user,
                     msg,
                     leave: true
                 },
-                users
             })
         })
     }
@@ -113,7 +122,6 @@ export default class Chat extends Component {
     }
 
     onSend(data) {
-        /* e.preventDefault(); */
         socket.emit("message", data);
         let { message } = this.state;
         message.message = ''
@@ -153,7 +161,9 @@ export default class Chat extends Component {
                 </Col>
                 <Col sm="3">
                     {
-                        connected.room === actual_room ? Object.keys(users).length > 0 ? <UsersBar users={users} /> : <></> : <></>
+                        loading ? <h1>loading</h1> : actual_room in users ?
+                            <UsersBar room={actual_room} users={users} /> :
+                            <></>
                     }
                 </Col>
                 <Col>
